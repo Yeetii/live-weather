@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { MapStore } from '$lib/stores';
 	import { MAPSTORE_CONTEXT_KEY } from '$lib/stores';
+	import { radarData, type CloudData } from '$lib/stores/rainStore';
 	import maplibregl, {
 		AttributionControl,
 		GeolocateControl,
@@ -17,7 +18,61 @@
 
 	let mapContainer: HTMLDivElement;
 
+	const animateWeather = (data: CloudData) => {
+		let i = 0;
+		const interval = setInterval(() => {
+			if (i > data.radar.length - 1) {
+				i = 0;
+				data.radar.forEach((frame) => {
+					mapStore.setPaintProperty(`rainviewer_${frame.path}`, 'raster-opacity', 1);
+				});
+				return;
+			} else {
+				data.radar.forEach((frame, index: number) => {
+					mapStore.setLayoutProperty(
+						`rainviewer_${frame.path}`,
+						'visibility',
+						index === i || index === i - 1 ? 'visible' : 'none'
+					);
+				});
+				if (i - 1 >= 0) {
+					const frame = data.radar[i - 1];
+					let opacity = 1;
+					setTimeout(() => {
+						const i2 = setInterval(() => {
+							if (opacity <= 0) {
+								return clearInterval(i2);
+							}
+							mapStore.setPaintProperty(`rainviewer_${frame.path}`, 'raster-opacity', opacity);
+							opacity -= 0.1;
+						}, 20);
+					}, 150);
+				}
+				i += 1;
+			}
+		}, 300);
+	};
+
 	onMount(() => {
+		radarData.subscribe((data) => {
+			if (!data) return;
+
+			data.radar.forEach((frame) => {
+				mapStore.addLayer({
+					id: `rainviewer_${frame.path}`,
+					type: 'raster',
+					source: {
+						type: 'raster',
+						tiles: [data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png'],
+						tileSize: 256
+					},
+					layout: { visibility: 'none' },
+					minzoom: 0,
+					maxzoom: 12
+				});
+			});
+			animateWeather(data);
+		});
 		var center = new LngLat(13.0509, 63.41698);
 		var zoom = 12;
 		const mapCenter = localStorage.getItem('mapCenter');
@@ -59,56 +114,6 @@
 					exaggeration: 1.5
 				})
 			);
-
-			fetch('https://api.rainviewer.com/public/weather-maps.json')
-				.then((res) => res.json())
-				.then((apiData) => {
-					apiData.radar.past.forEach((frame: any) => {
-						map.addLayer({
-							id: `rainviewer_${frame.path}`,
-							type: 'raster',
-							source: {
-								type: 'raster',
-								tiles: [apiData.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png'],
-								tileSize: 256
-							},
-							layout: { visibility: 'none' },
-							minzoom: 0,
-							maxzoom: 12
-						});
-					});
-
-					let i = 0;
-					const interval = setInterval(() => {
-						if (i > apiData.radar.past.length - 1) {
-							clearInterval(interval);
-							return;
-						} else {
-							apiData.radar.past.forEach((frame: any, index: number) => {
-								map.setLayoutProperty(
-									`rainviewer_${frame.path}`,
-									'visibility',
-									index === i || index === i - 1 ? 'visible' : 'none'
-								);
-							});
-							if (i - 1 >= 0) {
-								const frame = apiData.radar.past[i - 1];
-								let opacity = 1;
-								setTimeout(() => {
-									const i2 = setInterval(() => {
-										if (opacity <= 0) {
-											return clearInterval(i2);
-										}
-										map.setPaintProperty(`rainviewer_${frame.path}`, 'raster-opacity', opacity);
-										opacity -= 0.1;
-									}, 50);
-								}, 400);
-							}
-							i += 1;
-						}
-					}, 500);
-				})
-				.catch(console.error);
 		});
 	});
 </script>
