@@ -1,0 +1,9 @@
+{
+	"name": "Årevädret",
+	"short_name": "Årevädret",
+	"description": "",
+	"start_url": "/",
+	"display": "standalone",
+	"background_color": "#D97633",
+	"theme_color": "#FF0000"
+}

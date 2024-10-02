@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+	* {
+		box-sizing: border-box;
+	}
+
+	html,
+	body,
+	#app,
+	main {
+		@apply h-full;
+	}
+
+	main > * {
+		@apply w-full;
+	}
+
+	a {
+		@apply underline underline-offset-4 hover:text-slate-400;
+	}
+
+	a[target='_blank']::after {
+		content: ' 🔗';
+	}
+
+	h2 {
+		@apply text-2xl font-bold;
+	}
+}
