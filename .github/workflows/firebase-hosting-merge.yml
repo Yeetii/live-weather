@@ -28,11 +28,8 @@ jobs:
           cache-dependency-path: "frontend/pnpm-lock.yaml"
       - name: Install dependencies in Svelte subfolder
         run: pnpm install
-      - name: Make envfile
-        run: |
-          echo "PUBLIC_MAPTILER_KEY=${PUBLIC_MAPTILER_KEY}" > .env
       - name: Build in Svelte subfolder
-        run: pnpm --env-file=.env build
+        run: pnpm build
       - name: Check
         run: pnpm check
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { PUBLIC_MAPTILER_KEY } from '$env/static/public';
 	import type { MapStore } from '$lib/stores';
 	import { MAPSTORE_CONTEXT_KEY } from '$lib/stores';
 	import maplibregl, {
@@ -30,7 +29,7 @@
 
 		const map = new Map({
 			container: mapContainer,
-			style: `https://api.maptiler.com/maps/c852a07e-70f5-49c3-aebf-ad7d488e4495/style.json?key=${PUBLIC_MAPTILER_KEY}`,
+			style: `https://api.maptiler.com/maps/c852a07e-70f5-49c3-aebf-ad7d488e4495/style.json?key=KxXGPUn8leqAeKO3GqWn`,
 			center: center,
 			zoom: zoom,
 			hash: true,
