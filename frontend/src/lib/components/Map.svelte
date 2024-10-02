@@ -124,25 +124,6 @@
 	}
 
 	onMount(() => {
-		radarData.subscribe((data) => {
-			if (!data) return;
-
-			data.radar.forEach((frame) => {
-				mapStore.addLayer({
-					id: `rainviewer_${frame.path}`,
-					type: 'raster',
-					source: {
-						type: 'raster',
-						tiles: [data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png'],
-						tileSize: 256
-					},
-					layout: { visibility: 'none' },
-					minzoom: 0,
-					maxzoom: 12
-				});
-			});
-			animateWeather(data);
-		});
 		var center = new LngLat(13.0509, 63.41698);
 		var zoom = 12;
 		const mapCenter = localStorage.getItem('mapCenter');
@@ -203,15 +184,44 @@
 				{
 					imageUrl:
 						'https://api.trafikinfo.trafikverket.se/v2/Images/RoadConditionCamera_39635520.Jpeg?type=fullsize&maxage=140',
-					coordinates: [12.702011476723557, 63.36705212550013]
+					coordinates: [12.382941421804786, 63.26835926669674]
 				},
 				{
 					imageUrl:
 						'https://api.trafikinfo.trafikverket.se/v2/Images/RoadConditionCamera_39626819.Jpeg?type=fullsize&maxage=140',
 					coordinates: [12.407996503920517, 63.519546112666376]
+				},
+				{
+					imageUrl:
+						'https://api.trafikinfo.trafikverket.se/v2/Images/RoadConditionCamera_39636227.Jpeg?type=fullsize&maxage=140',
+					coordinates: [12.088252196720449, 63.31759038262924]
+				},
+				{
+					imageUrl: 'https://metnet.no/custcams/nedalshytta/laget/webcam_hd.jpg',
+					coordinates: [12.101315126910368, 62.97826646239796]
 				}
 			];
 			addWebcamsToMap(map, webcams);
+
+			radarData.subscribe((data) => {
+				if (!data) return;
+
+				data.radar.forEach((frame) => {
+					mapStore.addLayer({
+						id: `rainviewer_${frame.path}`,
+						type: 'raster',
+						source: {
+							type: 'raster',
+							tiles: [data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png'],
+							tileSize: 256
+						},
+						layout: { visibility: 'none' },
+						minzoom: 0,
+						maxzoom: 12
+					});
+				});
+				animateWeather(data);
+			});
 		});
 	});
 </script>
