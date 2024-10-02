@@ -54,6 +54,7 @@
 		"@microsoft/signalr": "^8.0.7",
 		"@types/geojson": "^7946.0.14",
 		"dotenv": "^16.4.5",
+		"firebase": "^10.14.0",
 		"maplibre-gl": "^4.6.0"
 	},
 	"packageManager": "pnpm@9.6.0",
