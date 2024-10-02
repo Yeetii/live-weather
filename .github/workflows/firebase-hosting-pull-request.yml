@@ -38,3 +38,4 @@ jobs:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
           firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT_LIVE_WEATHER_EEFC5 }}"
           projectId: live-weather-eefc5
+          entryPoint: "frontend"
