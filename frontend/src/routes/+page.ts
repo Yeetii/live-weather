@@ -1,9 +1,9 @@
 import type { PageLoad } from './$types';
 
 export const load: PageLoad = async () => {
-	const title = 'Peakshunters';
-	const site_name = 'Peakshunters';
-	const site_description = 'Visualizes peaks summited in Strava activities';
+	const title = 'Årevädret';
+	const site_name = 'Årevädret';
+	const site_description = 'Årevädret - Live!';
 
 	return {
 		title,

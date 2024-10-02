@@ -1,4 +1,4 @@
-# Svelte-MapLibre PeaksHunters
+# Svelte-MapLibre Live Weather
 
 [![CI](https://github.com/watergis/sveltekit-maplibre-boilerplate/actions/workflows/ci.yml/badge.svg)](https://github.com/watergis/sveltekit-maplibre-boilerplate/actions/workflows/ci.yml)
 
