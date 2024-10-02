@@ -53,6 +53,76 @@
 		}, 300);
 	};
 
+	type WebcamData = {
+		imageUrl: string;
+		coordinates: number[];
+	};
+
+	function addWebcamsToMap(map: maplibregl.Map, webcams: WebcamData[]) {
+		webcams.forEach((webcam, index) => {
+			const imageId = `webcam-image-${index}`; // Unique image ID for each image
+
+			map
+				.loadImage(webcam.imageUrl)
+				.then((image) => {
+					// Add each image with a unique ID
+					if (!map.hasImage(imageId)) {
+						map.addImage(imageId, image.data);
+					}
+
+					// Add GeoJSON source for each webcam
+					const sourceId = `webcam-point-${index}`;
+					if (!map.getSource(sourceId)) {
+						map.addSource(sourceId, {
+							type: 'geojson',
+							data: {
+								type: 'FeatureCollection',
+								features: [
+									{
+										type: 'Feature',
+										geometry: {
+											type: 'Point',
+											coordinates: webcam.coordinates
+										},
+										properties: {
+											name: `Webcam ${index + 1}`
+										}
+									}
+								]
+							}
+						});
+					}
+
+					// Add a layer to display the image at each webcam's coordinates
+					const layerId = `webcam-layer-${index}`;
+					if (!map.getLayer(layerId)) {
+						map.addLayer({
+							id: layerId,
+							type: 'symbol',
+							source: sourceId,
+							layout: {
+								'icon-image': imageId,
+								'icon-size': [
+									'interpolate',
+									['linear'],
+									['zoom'],
+									0,
+									0, // At zoom level 0, size is 0
+									10,
+									0.01, // At zoom level 10, size is 0.01
+									22,
+									1 // At zoom level 22, size is 1
+								]
+							}
+						});
+					}
+				})
+				.catch((error: any) => {
+					console.error(`Error loading image for webcam ${index + 1}:`, error);
+				});
+		});
+	}
+
 	onMount(() => {
 		radarData.subscribe((data) => {
 			if (!data) return;
@@ -108,12 +178,40 @@
 		});
 
 		map.on('load', () => {
+			map.on('zoom', (e: any) => {
+				console.log(e.target.getZoom());
+			});
+
 			map.addControl(
 				new maplibregl.TerrainControl({
 					source: 'terrain_rgb',
 					exaggeration: 1.5
 				})
 			);
+
+			const webcams = [
+				{
+					imageUrl:
+						'https://api.trafikinfo.trafikverket.se/v2/Images/RoadConditionCamera_39635528.Jpeg?type=fullsize&maxage=140',
+					coordinates: [13.206262037974694, 63.25443937020817]
+				},
+				{
+					imageUrl:
+						'https://api.trafikinfo.trafikverket.se/v2/Images/RoadConditionCamera_39635384.Jpeg?type=fullsize&maxage=140',
+					coordinates: [12.702011476723557, 63.36705212550013]
+				},
+				{
+					imageUrl:
+						'https://api.trafikinfo.trafikverket.se/v2/Images/RoadConditionCamera_39635520.Jpeg?type=fullsize&maxage=140',
+					coordinates: [12.702011476723557, 63.36705212550013]
+				},
+				{
+					imageUrl:
+						'https://api.trafikinfo.trafikverket.se/v2/Images/RoadConditionCamera_39626819.Jpeg?type=fullsize&maxage=140',
+					coordinates: [12.407996503920517, 63.519546112666376]
+				}
+			];
+			addWebcamsToMap(map, webcams);
 		});
 	});
 </script>
