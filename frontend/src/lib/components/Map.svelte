@@ -21,36 +21,20 @@
 	const animateWeather = (data: CloudData) => {
 		let i = 0;
 		const interval = setInterval(() => {
-			if (i > data.radar.length - 1) {
+			if (i > data.radar.length) {
 				i = 0;
-				data.radar.forEach((frame) => {
-					mapStore.setPaintProperty(`rainviewer_${frame.path}`, 'raster-opacity', 1);
-				});
 				return;
 			} else {
 				data.radar.forEach((frame, index: number) => {
 					mapStore.setLayoutProperty(
 						`rainviewer_${frame.path}`,
 						'visibility',
-						index === i || index === i - 1 ? 'visible' : 'none'
+						index === i ? 'visible' : 'none'
 					);
 				});
-				if (i - 1 >= 0) {
-					const frame = data.radar[i - 1];
-					let opacity = 1;
-					setTimeout(() => {
-						const i2 = setInterval(() => {
-							if (opacity <= 0) {
-								return clearInterval(i2);
-							}
-							mapStore.setPaintProperty(`rainviewer_${frame.path}`, 'raster-opacity', opacity);
-							opacity -= 0.1;
-						}, 20);
-					}, 150);
-				}
 				i += 1;
 			}
-		}, 300);
+		}, 600);
 	};
 
 	type WebcamData = {
@@ -159,10 +143,6 @@
 		});
 
 		map.on('load', () => {
-			map.on('zoom', (e: any) => {
-				console.log(e.target.getZoom());
-			});
-
 			map.addControl(
 				new maplibregl.TerrainControl({
 					source: 'terrain_rgb',
