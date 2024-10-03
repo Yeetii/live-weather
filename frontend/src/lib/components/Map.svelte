@@ -179,6 +179,11 @@
 				{
 					imageUrl: 'https://metnet.no/custcams/nedalshytta/laget/webcam_hd.jpg',
 					coordinates: [12.101315126910368, 62.97826646239796]
+				},
+				{
+					imageUrl:
+						'https://firebasestorage.googleapis.com/v0/b/live-weather-eefc5.appspot.com/o/webcam.jpg?alt=media',
+					coordinates: [13.060675094635846, 63.38628065222742]
 				}
 			];
 			addWebcamsToMap(map, webcams);
