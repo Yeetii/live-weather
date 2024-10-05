@@ -1,4 +1,4 @@
-package trafikverket
+package functions
 
 import (
 	"bytes"
