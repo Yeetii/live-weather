@@ -6,17 +6,27 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 )
+
+func IsLocal() bool {
+	// Check if the environment variable 'K_SERVICE' is set
+	return os.Getenv("K_SERVICE") == ""
+}
 
 func UploadToFirebaseStorage(url string, fileName string, location []float64) error {
 	fmt.Println("Uploading image to Firebase Storage...")
 	// Initialize Firebase app
 	ctx := context.Background()
 	conf := &firebase.Config{StorageBucket: "live-weather-eefc5.appspot.com"}
-	app, err := firebase.NewApp(ctx, conf, option.WithCredentialsFile("service-account.json"))
+	var opt option.ClientOption
+	if IsLocal() {
+		opt = option.WithCredentialsFile("service-account.json")
+	}
+	app, err := firebase.NewApp(ctx, conf, opt)
 	if err != nil {
 		return fmt.Errorf("error initializing Firebase app: %w", err)
 	}

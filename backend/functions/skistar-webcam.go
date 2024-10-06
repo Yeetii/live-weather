@@ -11,7 +11,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 )
 
-type Input struct {
+type SkistarInput struct {
 	WebcamId string
 	Location []float64
 }
@@ -30,7 +30,7 @@ func init() {
 // Förberget = 49
 
 func main(w http.ResponseWriter, r *http.Request) {
-	inputs := []Input{{WebcamId: "46", Location: []float64{13.061854, 63.386158}},
+	inputs := []SkistarInput{{WebcamId: "46", Location: []float64{13.061854, 63.386158}},
 		{WebcamId: "61", Location: []float64{12.97008963763537, 63.410562604101635}},
 		{WebcamId: "62", Location: []float64{13.063774, 63.436330}},
 		{WebcamId: "63", Location: []float64{13.112216429602679, 63.40863152963157}},

@@ -13,6 +13,7 @@ import (
 
 	firebase "firebase.google.com/go"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
+	"github.com/Yeetii/live-weather/lib"
 	"google.golang.org/api/option"
 )
 
@@ -23,9 +24,10 @@ func init() {
 // Firebase Function to fetch from Trafikverket API and store in Firestore
 func FetchAndStoreToFirebase(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-
-	// Initialize Firebase App
-	opt := option.WithCredentialsFile("service-account.json")
+	var opt option.ClientOption
+	if lib.IsLocal() {
+		opt = option.WithCredentialsFile("service-account.json")
+	}
 	config := &firebase.Config{
 		DatabaseURL: "https://live-weather-eefc5.firebaseio.com",
 	}
