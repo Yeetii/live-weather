@@ -13,7 +13,8 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { getContext, onMount } from 'svelte';
 	import '../../global.css';
-
+	import type { Feature, GeoJsonProperties, Geometry } from 'geojson';
+	
 	let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
 
 	let mapContainer: HTMLDivElement;
@@ -42,7 +43,74 @@
 		coordinates: number[];
 	};
 
-	function addWebcamsToMap(map: maplibregl.Map, webcams: WebcamData[]) {
+	interface Webcam {
+	url: string
+	location: Feature<Geometry, GeoJsonProperties>
+	}
+
+
+	function addWebcamsToMap(map: maplibregl.Map, webcams: WebcamData[]) {		
+		fetch("http://localhost:8080/listFiles")
+		.then((response) => response.json())
+		.then((data: Webcam[]) => {
+			data.forEach((webcam) => {
+				const imageId = webcam.location.id as string;
+
+			map
+				.loadImage(webcam.url)
+				.then((image) => {
+					// Add each image with a unique ID
+					if (!map.hasImage(imageId)) {
+						map.addImage(imageId, image.data);
+					}
+
+					// Add GeoJSON source for each webcam
+					const sourceId = `webcam-point-${imageId}`;
+					if (!map.getSource(sourceId)) {
+						map.addSource(sourceId, {
+							type: 'geojson',
+							data: {
+								type: 'FeatureCollection',
+								features: [webcam.location]
+							}
+						});
+					}
+
+					console.log(map.getSource(sourceId))
+
+					// Add a layer to display the image at each webcam's coordinates
+					const layerId = `webcam-layer-${imageId}`;
+					if (!map.getLayer(layerId)) {
+						map.addLayer({
+							id: layerId,
+							type: 'symbol',
+							source: sourceId,
+							layout: {
+								'icon-image': imageId,
+								'icon-size': [
+									'interpolate',
+									['linear'],
+									['zoom'],
+									0,
+									0, // At zoom level 0, size is 0
+									10,
+									0.01, // At zoom level 10, size is 0.01
+									22,
+									1 // At zoom level 22, size is 1
+								]
+							}
+						});
+					}
+
+					console.log(map.getLayer(layerId))	
+				})
+				.catch((error: any) => {
+					console.error(`Error loading image for webcam ${imageId}:`, error);
+				});
+			});
+		});
+
+
 		webcams.forEach((webcam, index) => {
 			const imageId = `webcam-image-${index}`; // Unique image ID for each image
 
@@ -77,6 +145,8 @@
 						});
 					}
 
+					console.log(map.getSource(sourceId))
+
 					// Add a layer to display the image at each webcam's coordinates
 					const layerId = `webcam-layer-${index}`;
 					if (!map.getLayer(layerId)) {
@@ -100,6 +170,8 @@
 							}
 						});
 					}
+
+					console.log(map.getLayer(layerId))	
 				})
 				.catch((error: any) => {
 					console.error(`Error loading image for webcam ${index + 1}:`, error);
@@ -119,7 +191,7 @@
 
 		const map = new Map({
 			container: mapContainer,
-			style: `https://api.maptiler.com/maps/c852a07e-70f5-49c3-aebf-ad7d488e4495/style.json?key=KxXGPUn8leqAeKO3GqWn`,
+			style: `https://api.maptiler.com/maps/basic-v2/style.json?key=KxXGPUn8leqAeKO3GqWn`,
 			center: center,
 			zoom: zoom,
 			hash: true,
@@ -143,13 +215,6 @@
 		});
 
 		map.on('load', () => {
-			map.addControl(
-				new maplibregl.TerrainControl({
-					source: 'terrain_rgb',
-					exaggeration: 1.5
-				})
-			);
-
 			const webcams = [
 				{
 					imageUrl:
@@ -179,14 +244,45 @@
 				{
 					imageUrl: 'https://metnet.no/custcams/nedalshytta/laget/webcam_hd.jpg',
 					coordinates: [12.101315126910368, 62.97826646239796]
-				},
-				{
-					imageUrl:
-						'https://firebasestorage.googleapis.com/v0/b/live-weather-eefc5.appspot.com/o/webcam.jpg?alt=media',
-					coordinates: [13.060675094635846, 63.38628065222742]
 				}
 			];
+
 			addWebcamsToMap(map, webcams);
+
+			map.addSource('text-source', {
+				type: 'geojson',
+				data: {
+					type: 'FeatureCollection',
+					features: [
+						{
+							type: 'Feature',
+							geometry: {
+								type: 'Point',
+								coordinates: [13.160675, 63.380280] // Coordinates for the label
+							},
+							properties: {
+								title: '5°C' // Text to display
+							}
+						}
+					]
+				}
+			});
+
+			// Add a Symbol Layer to display the text
+			map.addLayer({
+				id: 'text-layer',
+				type: 'symbol',
+				source: 'text-source',
+				layout: {
+					'text-field': ['get', 'title'], // Get the text from properties
+					'text-size': 22, // Font size
+					'text-anchor': 'top', // Position above the point
+					'text-offset': [0, 1] // Offset the text position
+				},
+				paint: {
+					'text-color': '#000' // Text color
+				}
+			});
 
 			radarData.subscribe((data) => {
 				if (!data) return;
@@ -205,7 +301,7 @@
 						maxzoom: 12
 					});
 				});
-				animateWeather(data);
+				// animateWeather(data);
 			});
 		});
 	});

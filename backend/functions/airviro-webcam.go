@@ -14,10 +14,10 @@ func init() {
 }
 
 func collectAirviroWebcams(w http.ResponseWriter, r *http.Request) {
-	inputs := []Input{{WebcamId: "borga", Location: []float64{0, 0}},
-		{WebcamId: "helags", Location: []float64{0, 0}},
-		{WebcamId: "ramundberget", Location: []float64{0, 0}},
-		{WebcamId: "bydalen", Location: []float64{0, 0}},
+	inputs := []Input{{WebcamId: "borga", Location: []float64{15.03789571840728, 64.84199155484801}},
+		{WebcamId: "helags", Location: []float64{12.505582249386759, 62.917014196762445}},
+		{WebcamId: "ramundberget", Location: []float64{12.37264481898198, 62.69248269325625}},
+		{WebcamId: "bydalen", Location: []float64{13.75263354936005, 63.10759607237622}},
 	}
 
 	for _, input := range inputs {

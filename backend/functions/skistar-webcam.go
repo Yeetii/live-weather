@@ -30,15 +30,15 @@ func init() {
 // Förberget = 49
 
 func main(w http.ResponseWriter, r *http.Request) {
-	inputs := []Input{{WebcamId: "46", Location: []float64{12.832031, 64.628695}},
-		{WebcamId: "61", Location: []float64{0, 0}},
-		{WebcamId: "62", Location: []float64{0, 0}},
-		{WebcamId: "63", Location: []float64{0, 0}},
-		{WebcamId: "77", Location: []float64{0, 0}},
-		{WebcamId: "44", Location: []float64{0, 0}},
-		{WebcamId: "60", Location: []float64{0, 0}},
-		{WebcamId: "45", Location: []float64{0, 0}},
-		{WebcamId: "49", Location: []float64{0, 0}},
+	inputs := []Input{{WebcamId: "46", Location: []float64{13.061854, 63.386158}},
+		{WebcamId: "61", Location: []float64{12.97008963763537, 63.410562604101635}},
+		{WebcamId: "62", Location: []float64{13.063774, 63.436330}},
+		{WebcamId: "63", Location: []float64{13.112216429602679, 63.40863152963157}},
+		{WebcamId: "77", Location: []float64{13.07677168424639, 63.402590779054385}},
+		{WebcamId: "44", Location: []float64{13.079073, 63.427271}},
+		{WebcamId: "60", Location: []float64{13.113218812480724, 63.40418386515296}},
+		{WebcamId: "45", Location: []float64{13.063259360877352, 63.41586041513909}},
+		{WebcamId: "49", Location: []float64{13.182920769760132, 63.38747245909455}},
 	}
 
 	for _, input := range inputs {

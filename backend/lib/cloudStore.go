@@ -48,7 +48,7 @@ func UploadToFirebaseStorage(url string, fileName string, location []float64) er
 	defer writer.Close()
 
 	writer.ObjectAttrs.Metadata = map[string]string{
-		"location": fmt.Sprintf(`{"type": "Point", "coordinates": [%f, %f]}`, location[0], location[1]),
+		"location": fmt.Sprintf(`[%f, %f]`, location[0], location[1]),
 	}
 
 	if _, err := io.Copy(writer, resp.Body); err != nil {
