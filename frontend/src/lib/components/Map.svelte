@@ -14,6 +14,7 @@
 	import { getContext, onMount } from 'svelte';
 	import '../../global.css';
 	import type { Feature, GeoJsonProperties, Geometry } from 'geojson';
+	import { dev } from '$app/environment';
 	
 	let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
 
@@ -44,8 +45,9 @@
 	}
 
 
-	function addWebcamsToMap(map: maplibregl.Map) {		
-		fetch("http://localhost:8080/listFiles")
+	function addWebcamsToMap(map: maplibregl.Map) {
+		const url = dev ? "http://localhost:8080/listFiles" : "https://live-weather-461142450582.europe-north1.run.app//listFiles";
+		fetch(url)
 		.then((response) => response.json())
 		.then((data: Webcam[]) => {
 			data.forEach((webcam) => {
