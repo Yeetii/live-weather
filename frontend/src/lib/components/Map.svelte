@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { dev } from '$app/environment';
 	import type { MapStore } from '$lib/stores';
 	import { MAPSTORE_CONTEXT_KEY } from '$lib/stores';
 	import { radarData, type CloudData } from '$lib/stores/rainStore';
+	import type { Feature, GeoJsonProperties, Geometry } from 'geojson';
 	import maplibregl, {
 		AttributionControl,
 		GeolocateControl,
@@ -13,9 +15,7 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { getContext, onMount } from 'svelte';
 	import '../../global.css';
-	import type { Feature, GeoJsonProperties, Geometry } from 'geojson';
-	import { dev } from '$app/environment';
-	
+
 	let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
 
 	let mapContainer: HTMLDivElement;
@@ -40,72 +40,73 @@
 	};
 
 	interface Webcam {
-	url: string
-	location: Feature<Geometry, GeoJsonProperties>
+		url: string;
+		location: Feature<Geometry, GeoJsonProperties>;
 	}
 
-
 	function addWebcamsToMap(map: maplibregl.Map) {
-		const url = dev ? "http://localhost:8080/listFiles" : "https://live-weather-461142450582.europe-north1.run.app//listFiles";
+		const url = dev
+			? 'http://localhost:8080/listFiles'
+			: 'https://api.weather.erikmagnusson.com/listFiles';
 		fetch(url)
-		.then((response) => response.json())
-		.then((data: Webcam[]) => {
-			data.forEach((webcam) => {
-				const imageId = webcam.location.id as string;
+			.then((response) => response.json())
+			.then((data: Webcam[]) => {
+				data.forEach((webcam) => {
+					const imageId = webcam.location.id as string;
 
-			map
-				.loadImage(webcam.url)
-				.then((image) => {
-					// Add each image with a unique ID
-					if (!map.hasImage(imageId)) {
-						map.addImage(imageId, image.data);
-					}
-
-					// Add GeoJSON source for each webcam
-					const sourceId = `webcam-point-${imageId}`;
-					if (!map.getSource(sourceId)) {
-						map.addSource(sourceId, {
-							type: 'geojson',
-							data: {
-								type: 'FeatureCollection',
-								features: [webcam.location]
+					map
+						.loadImage(webcam.url)
+						.then((image) => {
+							// Add each image with a unique ID
+							if (!map.hasImage(imageId)) {
+								map.addImage(imageId, image.data);
 							}
-						});
-					}
 
-					console.log(map.getSource(sourceId))
-
-					// Add a layer to display the image at each webcam's coordinates
-					const layerId = `webcam-layer-${imageId}`;
-					if (!map.getLayer(layerId)) {
-						map.addLayer({
-							id: layerId,
-							type: 'symbol',
-							source: sourceId,
-							layout: {
-								'icon-image': imageId,
-								'icon-size': [
-									'interpolate',
-									['linear'],
-									['zoom'],
-									0,
-									0, // At zoom level 0, size is 0
-									10,
-									0.01, // At zoom level 10, size is 0.01
-									22,
-									1 // At zoom level 22, size is 1
-								]
+							// Add GeoJSON source for each webcam
+							const sourceId = `webcam-point-${imageId}`;
+							if (!map.getSource(sourceId)) {
+								map.addSource(sourceId, {
+									type: 'geojson',
+									data: {
+										type: 'FeatureCollection',
+										features: [webcam.location]
+									}
+								});
 							}
-						});
-					}
 
-					console.log(map.getLayer(layerId))	
-				})
-				.catch((error: any) => {
-					console.error(`Error loading image for webcam ${imageId}:`, error);
+							console.log(map.getSource(sourceId));
+
+							// Add a layer to display the image at each webcam's coordinates
+							const layerId = `webcam-layer-${imageId}`;
+							if (!map.getLayer(layerId)) {
+								map.addLayer({
+									id: layerId,
+									type: 'symbol',
+									source: sourceId,
+									layout: {
+										'icon-image': imageId,
+										'icon-size': [
+											'interpolate',
+											['linear'],
+											['zoom'],
+											0,
+											0, // At zoom level 0, size is 0
+											10,
+											0.01, // At zoom level 10, size is 0.01
+											22,
+											1 // At zoom level 22, size is 1
+										]
+									}
+								});
+							}
+
+							console.log(map.getLayer(layerId));
+						})
+						.catch((error: any) => {
+							console.error(`Error loading image for webcam ${imageId}:`, error);
+						});
 				});
 			});
-		});
 	}
 
 	onMount(() => {
@@ -144,7 +145,6 @@
 		});
 
 		map.on('load', () => {
-
 			addWebcamsToMap(map);
 
 			map.addSource('text-source', {
@@ -156,7 +156,7 @@
 							type: 'Feature',
 							geometry: {
 								type: 'Point',
-								coordinates: [13.160675, 63.380280] // Coordinates for the label
+								coordinates: [13.160675, 63.38028] // Coordinates for the label
 							},
 							properties: {
 								title: '5°C' // Text to display
