@@ -6,7 +6,7 @@ import (
 
 	// Blank-import the function package so the init() runs
 	"github.com/GoogleCloudPlatform/functions-framework-go/funcframework"
-	_ "github.com/Yeetii/live-weather/functions"
+	_ "github.com/Yeetii/live-weather"
 )
 
 func main() {
