@@ -93,6 +93,7 @@ func ListFiles(w http.ResponseWriter, r *http.Request) {
 
 	// Set response header as JSON
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	// Convert the files list to JSON and write it to the response
 	json.NewEncoder(w).Encode(files)

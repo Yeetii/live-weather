@@ -9,6 +9,16 @@ export type MapStore = ReturnType<typeof createMapStore>;
 export const createMapStore = () => {
 	const { set, update, subscribe } = writable<MaplibreMap>(undefined);
 
+	const mapInitialized = writable(false);
+
+	const subscibeMapInitialized = mapInitialized.subscribe
+
+	const setMap = (map: MaplibreMap) => {
+		set(map);
+		map.on('load', () => {
+			mapInitialized.set(true);
+		});
+	};
 
 	const addLayer = (layer: AddLayerObject, beforeId?: string) => {
 		update((state) => {
@@ -122,9 +132,10 @@ export const createMapStore = () => {
 	return {
 		subscribe,
 		update,
-		set,
+		setMap,
 		setPaintProperty,
 		setLayoutProperty,
-		addLayer
+		addLayer,
+		subscibeMapInitialized
 	};
 };

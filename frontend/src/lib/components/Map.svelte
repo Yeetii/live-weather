@@ -2,7 +2,6 @@
 	import { dev } from '$app/environment';
 	import type { MapStore } from '$lib/stores';
 	import { MAPSTORE_CONTEXT_KEY } from '$lib/stores';
-	import { radarData, type CloudData } from '$lib/stores/rainStore';
 	import type { Feature, GeoJsonProperties, Geometry } from 'geojson';
 	import maplibregl, {
 		AttributionControl,
@@ -15,29 +14,11 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { getContext, onMount } from 'svelte';
 	import '../../global.css';
+	import Radar from './Radar.svelte';
 
 	let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
 
 	let mapContainer: HTMLDivElement;
-
-	const animateWeather = (data: CloudData) => {
-		let i = 0;
-		const interval = setInterval(() => {
-			if (i > data.radar.length) {
-				i = 0;
-				return;
-			} else {
-				data.radar.forEach((frame, index: number) => {
-					mapStore.setLayoutProperty(
-						`rainviewer_${frame.path}`,
-						'visibility',
-						index === i ? 'visible' : 'none'
-					);
-				});
-				i += 1;
-			}
-		}, 600);
-	};
 
 	interface Webcam {
 		url: string;
@@ -138,7 +119,7 @@
 		map.addControl(new ScaleControl({ maxWidth: 80, unit: 'metric' }), 'bottom-right');
 		map.addControl(new AttributionControl({ compact: true }), 'bottom-right');
 
-		mapStore?.set(map);
+		mapStore?.setMap(map);
 
 		map.on('error', (e: Error) => {
 			console.error('Map error: ', e);
@@ -181,31 +162,13 @@
 					'text-color': '#000' // Text color
 				}
 			});
-
-			radarData.subscribe((data) => {
-				if (!data) return;
-
-				data.radar.forEach((frame) => {
-					mapStore.addLayer({
-						id: `rainviewer_${frame.path}`,
-						type: 'raster',
-						source: {
-							type: 'raster',
-							tiles: [data.host + frame.path + '/256/{z}/{x}/{y}/2/1_1.png'],
-							tileSize: 256
-						},
-						layout: { visibility: 'none' },
-						minzoom: 0,
-						maxzoom: 12
-					});
-				});
-				// animateWeather(data);
-			});
 		});
 	});
 </script>
 
-<div class="map w-full h-full" data-testid="map" bind:this={mapContainer}></div>
+<div class="map w-full h-full" data-testid="map" bind:this={mapContainer}>
+	<Radar />
+</div>
 
 <style>
 	.map {
