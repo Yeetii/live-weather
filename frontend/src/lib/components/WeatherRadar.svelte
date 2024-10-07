@@ -99,7 +99,6 @@
 					id: `rainviewer_${frame.path}`,
 					timestamp: frame.time
 				}));
-				console.log(radarLayers);
 			});
 		});
 	});

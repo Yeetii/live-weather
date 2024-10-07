@@ -1,4 +1,4 @@
-import type { AddLayerObject, Map as MaplibreMap, StyleSetterOptions } from 'maplibre-gl';
+import type { AddLayerObject, Map as MaplibreMap, Source, SourceSpecification, StyleSetterOptions } from 'maplibre-gl';
 import { writable } from 'svelte/store';
 
 export const MAPSTORE_CONTEXT_KEY = 'maplibre-map-store';
@@ -28,6 +28,36 @@ export const createMapStore = () => {
 			return state;
 		});
 	};
+
+	const addSource = (id: string, source: SourceSpecification) => {
+		update((state) => {
+			if (state) {
+				state.addSource(id, source);
+			}
+			return state;
+		});
+	}
+
+	const getSource = (id: string) => {
+		let source: Source | undefined;
+
+		const unsubscriber = subscribe((state) => {
+			if (state) {
+				source = state.getSource(id);
+			}
+		});
+		unsubscriber()
+		return source
+	}
+
+	const removeSource = (id: string) => {
+		update((state) => {
+			if (state) {
+				state.removeSource(id);
+			}
+			return state;
+		});
+	}
 
 	/**
 	 * Update Maplibre's PaintProperty
@@ -136,6 +166,9 @@ export const createMapStore = () => {
 		setPaintProperty,
 		setLayoutProperty,
 		addLayer,
+		addSource,
+		getSource,
+		removeSource,
 		subscibeMapInitialized
 	};
 };

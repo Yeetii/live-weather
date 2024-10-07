@@ -22,7 +22,6 @@ func init() {
 }
 
 func parseCoordinate(coordinate string) []float64 {
-	log.Printf("Parsing coordinate: %s", coordinate)
 	var lat, lon float64
 	fmt.Sscanf(coordinate, "POINT (%f %f)", &lon, &lat)
 	return []float64{lon, lat}
@@ -97,7 +96,6 @@ func UpdateTrafikverket(w http.ResponseWriter, r *http.Request) {
 	for _, result := range trafikData.RESPONSE.RESULT {
 		for _, measurepoint := range result.WeatherMeasurepoint {
 			coordinate := parseCoordinate(measurepoint.Geometry.WGS84)
-			log.Printf("Coordinate: %v", coordinate)
 			feature := geojson.NewPointFeature(coordinate)
 			feature.ID = measurepoint.ID
 			feature.Properties = map[string]interface{}{
@@ -123,7 +121,22 @@ func UpdateTrafikverket(w http.ResponseWriter, r *http.Request) {
 			log.Fatal("feature.ID is not a string")
 		}
 
-		_, err := firestoreClient.Collection("weatherObservations").Doc(id).Set(ctx, feature)
+		geoJsonBytes, marshalErr := feature.MarshalJSON()
+		if marshalErr != nil {
+			log.Printf("Failed to marshal feature: %v", marshalErr)
+			http.Error(w, "Failed to marshal feature", http.StatusInternalServerError)
+			return
+		}
+
+		var geoJsonMap map[string]interface{}
+		unmarshalErr := json.Unmarshal(geoJsonBytes, &geoJsonMap)
+		if unmarshalErr != nil {
+			log.Printf("Failed to unmarshal JSON into map: %v", unmarshalErr)
+			http.Error(w, "Failed to process JSON", http.StatusInternalServerError)
+			return
+		}
+
+		_, err := firestoreClient.Collection("weatherObservations").Doc(id).Set(ctx, geoJsonMap)
 		if err != nil {
 			log.Printf("Failed to store document: %v", err)
 			http.Error(w, "Failed to store data in Firestore", http.StatusInternalServerError)

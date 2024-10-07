@@ -15,7 +15,8 @@
 	import { getContext, onMount } from 'svelte';
 	import '../../global.css';
 	import WeatherRadar from './WeatherRadar.svelte';
-
+	import WeatherMeasurements from './WeatherMeasurements.svelte';
+	
 	let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
 
 	let mapContainer: HTMLDivElement;
@@ -121,46 +122,14 @@
 		map.on('load', () => {
 			addWebcamsToMap(map);
 
-			map.addSource('text-source', {
-				type: 'geojson',
-				data: {
-					type: 'FeatureCollection',
-					features: [
-						{
-							type: 'Feature',
-							geometry: {
-								type: 'Point',
-								coordinates: [13.160675, 63.38028] // Coordinates for the label
-							},
-							properties: {
-								title: '5°C' // Text to display
-							}
-						}
-					]
-				}
-			});
-
-			// Add a Symbol Layer to display the text
-			map.addLayer({
-				id: 'text-layer',
-				type: 'symbol',
-				source: 'text-source',
-				layout: {
-					'text-field': ['get', 'title'], // Get the text from properties
-					'text-size': 22, // Font size
-					'text-anchor': 'top', // Position above the point
-					'text-offset': [0, 1] // Offset the text position
-				},
-				paint: {
-					'text-color': '#000' // Text color
-				}
-			});
+			
 		});
 	});
 </script>
 
 <div class="map w-full h-full" data-testid="map" bind:this={mapContainer}>
 	<WeatherRadar />
+	<WeatherMeasurements />
 </div>
 
 <style>
