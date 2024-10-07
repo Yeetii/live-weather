@@ -3,17 +3,23 @@
 	import { MAPSTORE_CONTEXT_KEY } from '$lib/stores';
 	import { radarData } from '$lib/stores/rainStore';
 	import 'maplibre-gl/dist/maplibre-gl.css';
-	import { getContext, onMount } from 'svelte';
+	import { getContext, onDestroy, onMount } from 'svelte';
 	import '../../global.css';
 
 	let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
 
-	var radarLayerIds: string[];
+	type RadarLayer = {
+		id: string;
+		timestamp: number;
+	};
+
+	var radarLayers: RadarLayer[];
 	var interval: NodeJS.Timeout;
+	var currentTimestamp: number;
 	var radarEnabled = false;
 
 	const toggleRadar = (_e: Event) => {
-		if (!radarLayerIds) {
+		if (!radarLayers) {
 			radarEnabled = false;
 			return;
 		}
@@ -26,9 +32,11 @@
 	};
 
 	const disableRadar = () => {
-		radarLayerIds.forEach((id) => {
-			mapStore.setLayoutProperty(id, 'visibility', 'none');
-		});
+		if (radarLayers) {
+			radarLayers.forEach((layer) => {
+				mapStore.setLayoutProperty(layer.id, 'visibility', 'none');
+			});
+		}
 		clearInterval(interval);
 	};
 
@@ -43,10 +51,25 @@
 		let i = 0;
 
 		interval = setInterval(() => {
-			radarLayerIds.forEach((layerId, index: number) => {
-				mapStore.setLayoutProperty(layerId, 'visibility', index === i ? 'visible' : 'none');
-			});
+			currentTimestamp = radarLayers[i].timestamp;
+			mapStore.setLayoutProperty(
+				radarLayers[(i + radarLayers.length - 1) % radarLayers.length].id,
+				'visibility',
+				'none'
+			);
+			mapStore.setLayoutProperty(radarLayers[i].id, 'visibility', 'visible');
+			i = (i + 1) % radarLayers.length;
 		}, 600);
+	};
+
+	const timestampToString = (timestamp: number) => {
+		if (!timestamp) return '';
+
+		const date = new Date(timestamp * 1000);
+		const hours = date.getHours().toString().padStart(2, '0');
+		const minutes = date.getMinutes().toString().padStart(2, '0');
+		const seconds = date.getSeconds().toString().padStart(2, '0');
+		return `${hours}:${minutes}:${seconds}`;
 	};
 
 	onMount(() => {
@@ -59,7 +82,6 @@
 
 			mapStore.subscibeMapInitialized((value) => {
 				if (!value) return;
-				console.log('jsjsj');
 				data.radar.forEach((frame) => {
 					mapStore.addLayer({
 						id: `rainviewer_${frame.path}`,
@@ -74,9 +96,17 @@
 						maxzoom: 12
 					});
 				});
-				radarLayerIds = data.radar.map((frame) => `rainviewer_${frame.path}`);
+				radarLayers = data.radar.map((frame) => ({
+					id: `rainviewer_${frame.path}`,
+					timestamp: frame.time
+				}));
+				console.log(radarLayers);
 			});
 		});
+	});
+
+	onDestroy(() => {
+		disableRadar();
 	});
 </script>
 
@@ -95,5 +125,11 @@
 		</label>
 	</div>
 </div>
+
+{#if radarEnabled}
+	<div class="absolute bottom-5 left-5 z-50 font-bold text-lg">
+		{timestampToString(currentTimestamp)}
+	</div>
+{/if}
 
 <svelte:window on:keydown={handleKeydown} />

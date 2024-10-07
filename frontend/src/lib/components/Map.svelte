@@ -14,7 +14,7 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { getContext, onMount } from 'svelte';
 	import '../../global.css';
-	import Radar from './Radar.svelte';
+	import WeatherRadar from './WeatherRadar.svelte';
 
 	let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
 
@@ -55,8 +55,6 @@
 								});
 							}
 
-							console.log(map.getSource(sourceId));
-
 							// Add a layer to display the image at each webcam's coordinates
 							const layerId = `webcam-layer-${imageId}`;
 							if (!map.getLayer(layerId)) {
@@ -80,8 +78,6 @@
 									}
 								});
 							}
-
-							console.log(map.getLayer(layerId));
 						})
 						.catch((error: any) => {
 							console.error(`Error loading image for webcam ${imageId}:`, error);
@@ -167,7 +163,7 @@
 </script>
 
 <div class="map w-full h-full" data-testid="map" bind:this={mapContainer}>
-	<Radar />
+	<WeatherRadar />
 </div>
 
 <style>
