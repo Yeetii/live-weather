@@ -13,11 +13,19 @@ import (
 
 	firebase "firebase.google.com/go"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
+	geojson "github.com/paulmach/go.geojson"
 	"google.golang.org/api/option"
 )
 
 func init() {
 	functions.HTTP("updateTrafikverket", UpdateTrafikverket)
+}
+
+func parseCoordinate(coordinate string) []float64 {
+	log.Printf("Parsing coordinate: %s", coordinate)
+	var lat, lon float64
+	fmt.Sscanf(coordinate, "POINT (%f %f)", &lon, &lat)
+	return []float64{lon, lat}
 }
 
 // Firebase Function to fetch from Trafikverket API and store in Firestore
@@ -56,7 +64,7 @@ func UpdateTrafikverket(w http.ResponseWriter, r *http.Request) {
 	xmlData := fmt.Sprintf(`
 	<REQUEST>
 		<LOGIN authenticationkey="%s" />
-		<QUERY objecttype="WeatherMeasurepoint" schemaversion="2.1" limit="10">
+		<QUERY objecttype="WeatherMeasurepoint" schemaversion="2.1">
 			<FILTER>
 				<WITHIN name="Geometry.SWEREF99TM" shape="box" value="311863 6858375, 552124 7169867"/>
 			</FILTER>
@@ -84,21 +92,48 @@ func UpdateTrafikverket(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Store each WeatherMeasurepoint in Firestore
+	// Map trafikData into geojson features
+	var features []geojson.Feature
 	for _, result := range trafikData.RESPONSE.RESULT {
 		for _, measurepoint := range result.WeatherMeasurepoint {
-			// Store in Firestore with document ID as the WeatherMeasurepoint ID
-			_, err := firestoreClient.Collection("weatherObservations").Doc(measurepoint.ID).Set(ctx, measurepoint)
-			if err != nil {
-				log.Printf("Failed to store document: %v", err)
-				http.Error(w, "Failed to store data in Firestore", http.StatusInternalServerError)
-				return
+			coordinate := parseCoordinate(measurepoint.Geometry.WGS84)
+			log.Printf("Coordinate: %v", coordinate)
+			feature := geojson.NewPointFeature(coordinate)
+			feature.ID = measurepoint.ID
+			feature.Properties = map[string]interface{}{
+				"name":              measurepoint.Name,
+				"elevation":         nil,
+				"temperature_c":     measurepoint.Observation.Air.Temperature.Value,
+				"windSpeed_ms":      measurepoint.Observation.Wind[0].Speed.Value,
+				"windDirection_deg": measurepoint.Observation.Wind[0].Direction.Value,
+				"windGustSpeed_ms":  nil,
+				"humidity_percent":  measurepoint.Observation.Air.RelativeHumidity.Value,
+				"newSnow24h_cm":     nil,
+				"snowDepth_cm":      nil,
+				"visibility_m":      measurepoint.Observation.Air.VisibleDistance.Value,
 			}
+			features = append(features, *feature)
+		}
+	}
+
+	// Store each WeatherMeasurepoint in Firestore
+	for _, feature := range features {
+		id, ok := feature.ID.(string)
+		if !ok {
+			log.Fatal("feature.ID is not a string")
+		}
+
+		_, err := firestoreClient.Collection("weatherObservations").Doc(id).Set(ctx, feature)
+		if err != nil {
+			log.Printf("Failed to store document: %v", err)
+			http.Error(w, "Failed to store data in Firestore", http.StatusInternalServerError)
+			return
 		}
 	}
 
 	// Send a success response
 	fmt.Fprintln(w, "Data successfully fetched and stored in Firestore.")
+
 }
 
 type TrafikverketAPIResponse struct {

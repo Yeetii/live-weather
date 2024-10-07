@@ -38,12 +38,10 @@
 					map
 						.loadImage(webcam.url)
 						.then((image) => {
-							// Add each image with a unique ID
 							if (!map.hasImage(imageId)) {
 								map.addImage(imageId, image.data);
 							}
 
-							// Add GeoJSON source for each webcam
 							const sourceId = `webcam-point-${imageId}`;
 							if (!map.getSource(sourceId)) {
 								map.addSource(sourceId, {
@@ -55,7 +53,6 @@
 								});
 							}
 
-							// Add a layer to display the image at each webcam's coordinates
 							const layerId = `webcam-layer-${imageId}`;
 							if (!map.getLayer(layerId)) {
 								map.addLayer({
