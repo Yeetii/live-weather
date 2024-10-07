@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	firebase "firebase.google.com/go"
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
-	"github.com/Yeetii/live-weather/lib"
 	geojson "github.com/paulmach/go.geojson"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
@@ -21,12 +21,12 @@ func init() {
 	var err error
 	ctx := context.Background()
 	conf := &firebase.Config{StorageBucket: "live-weather-eefc5.appspot.com"}
-	var opt option.ClientOption
-	if lib.IsLocal() {
-		opt = option.WithCredentialsFile("service-account.json")
-	}
 
-	firebaseApp, err = firebase.NewApp(ctx, conf, opt)
+	var opts []option.ClientOption
+	if _, err := os.Stat("service-account.json"); err == nil {
+		opts = append(opts, option.WithCredentialsFile("service-account.json"))
+	}
+	firebaseApp, err = firebase.NewApp(ctx, conf, opts...)
 	if err != nil {
 		log.Fatalf("error initializing Firebase app: %v", err)
 	}
