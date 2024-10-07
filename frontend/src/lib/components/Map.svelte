@@ -27,8 +27,8 @@
 
 	function addWebcamsToMap(map: maplibregl.Map) {
 		const url = dev
-			? 'http://localhost:8080/listFiles'
-			: 'https://api.weather.erikmagnusson.com/listFiles';
+			? 'http://localhost:8080/fetchWebcams'
+			: 'https://api.weather.erikmagnusson.com/fetchWebcams';
 		fetch(url)
 			.then((response) => response.json())
 			.then((data: Webcam[]) => {

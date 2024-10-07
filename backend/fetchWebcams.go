@@ -31,7 +31,7 @@ func init() {
 		log.Fatalf("error initializing Firebase app: %v", err)
 	}
 
-	functions.HTTP("listFiles", ListFiles)
+	functions.HTTP("fetchWebcams", FetchWebcams)
 }
 
 type FileInfo struct {
@@ -39,7 +39,7 @@ type FileInfo struct {
 	Location geojson.Feature `json:"location"`
 }
 
-func ListFiles(w http.ResponseWriter, r *http.Request) {
+func FetchWebcams(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	// Get storage client

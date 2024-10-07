@@ -17,11 +17,11 @@ import (
 )
 
 func init() {
-	functions.HTTP("FetchStuff", FetchAndStoreToFirebase)
+	functions.HTTP("updateTrafikverket", UpdateTrafikverket)
 }
 
 // Firebase Function to fetch from Trafikverket API and store in Firestore
-func FetchAndStoreToFirebase(w http.ResponseWriter, r *http.Request) {
+func UpdateTrafikverket(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
 
 	var opts []option.ClientOption

@@ -16,10 +16,10 @@ type CommonInput struct {
 }
 
 func init() {
-	functions.HTTP("fetchWebcams", collectWebcams)
+	functions.HTTP("updateWebcams", UpdateWebcams)
 }
 
-func collectWebcams(w http.ResponseWriter, r *http.Request) {
+func UpdateWebcams(w http.ResponseWriter, r *http.Request) {
 	inputs := []CommonInput{{WebcamId: "borga", Location: []float64{15.03789571840728, 64.84199155484801}, ImageUrl: "https://www.airviro.com/borga/webcam/latestimg.jpg"},
 		{WebcamId: "helags", Location: []float64{12.505582249386759, 62.917014196762445}, ImageUrl: "https://www.airviro.com/helags/webcam/latestimg.jpg"},
 		{WebcamId: "ramundberget", Location: []float64{12.37264481898198, 62.69248269325625}, ImageUrl: "https://www.airviro.com/ramundberget/webcam/latestimg.jpg"},

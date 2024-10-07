@@ -17,7 +17,7 @@ type SkistarInput struct {
 }
 
 func init() {
-	functions.HTTP("fetchSkiStarWebcams", main)
+	functions.HTTP("updateSkiStarWebcams", UpdateSkiStarWebcams)
 }
 
 // Tege berg = 61
@@ -29,7 +29,7 @@ func init() {
 // VM-platå = 45
 // Förberget = 49
 
-func main(w http.ResponseWriter, r *http.Request) {
+func UpdateSkiStarWebcams(w http.ResponseWriter, r *http.Request) {
 	inputs := []SkistarInput{{WebcamId: "46", Location: []float64{13.061854, 63.386158}},
 		{WebcamId: "61", Location: []float64{12.97008963763537, 63.410562604101635}},
 		{WebcamId: "62", Location: []float64{13.063774, 63.436330}},
