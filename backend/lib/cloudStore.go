@@ -56,6 +56,7 @@ func UploadToFirebaseStorage(url string, fileName string, location []float64) er
 	writer.ObjectAttrs.Metadata = map[string]string{
 		"location": fmt.Sprintf(`[%f, %f]`, location[0], location[1]),
 	}
+	writer.ObjectAttrs.CacheControl = "public, max-age=180"
 
 	if _, err := io.Copy(writer, resp.Body); err != nil {
 		return fmt.Errorf("error writing to Firebase storage: %w", err)
