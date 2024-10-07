@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { MAPSTORE_CONTEXT_KEY, type MapStore } from "$lib/stores";
 	import { weatherStore } from "$lib/stores/weatherStore";
+	import type { GeoJSONSource } from "maplibre-gl";
 	import { getContext } from "svelte";
 
   let mapStore: MapStore = getContext(MAPSTORE_CONTEXT_KEY);
@@ -11,11 +12,13 @@
     weatherStore.subscribe((data) => {
       if (!data) return
 
-      console.log(data) // data is an array of features with temperature and humidity and
-
-      var source = mapStore.getSource('weatherMeasurement-source')
+      var source = mapStore.getSource('weatherMeasurement-source') as GeoJSONSource;
       if (source) {
-        mapStore.removeSource('weatherMeasurement-source')
+        source.setData({
+          type: 'FeatureCollection',
+          features: data
+        })
+        return
       }
 
       mapStore.addSource('weatherMeasurement-source', {
@@ -28,7 +31,6 @@
 
       addMeasurement('windSpeed_ms', 'm/s');
       addMeasurement('temperature_c', '°C');
-
     });
   })
 
