@@ -24,7 +24,7 @@
 			return;
 		}
 
-		if (!radarEnabled) {
+		if (radarEnabled) {
 			animateWeather();
 		} else {
 			disableRadar();
@@ -42,8 +42,8 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'w' || event.key === 'W') {
-			toggleRadar(event);
 			radarEnabled = !radarEnabled;
+			toggleRadar(event);
 		}
 	}
 
