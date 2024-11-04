@@ -34,10 +34,6 @@
     });
   })
 
-  
-
-
-
 function addMeasurement(attribute: string, unit: string) {
   mapStore.addLayer({
     id: attribute,

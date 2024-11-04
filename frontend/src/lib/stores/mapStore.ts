@@ -1,4 +1,4 @@
-import type { AddLayerObject, Map as MaplibreMap, Source, SourceSpecification, StyleSetterOptions } from 'maplibre-gl';
+import type { AddLayerObject, GetResourceResponse, Map as MaplibreMap, Source, SourceSpecification, StyleImageInterface, StyleImageMetadata, StyleSetterOptions } from 'maplibre-gl';
 import { writable } from 'svelte/store';
 
 export const MAPSTORE_CONTEXT_KEY = 'maplibre-map-store';
@@ -28,6 +28,17 @@ export const createMapStore = () => {
 			return state;
 		});
 	};
+
+	const hasLayer = (id: string) => {
+		let hasLayer: boolean = false;
+		const unsubscriber = subscribe((state) => {
+			if (state) {
+				hasLayer = state.getLayer(id) != undefined;
+			}
+		});
+		unsubscriber()
+		return hasLayer
+	}
 
 	const addSource = (id: string, source: SourceSpecification) => {
 		update((state) => {
@@ -159,6 +170,41 @@ export const createMapStore = () => {
 		});
 	};
 
+	const loadImage = (url: string) => {
+		let promise: Promise<GetResourceResponse<HTMLImageElement | ImageBitmap>> | null = null;
+		update((state) => {
+		  if (state) {
+			promise = state.loadImage(url);
+		  } 
+		  return state;
+		});
+		return promise!; // Note the non-null assertion operator (!) here
+	  };
+
+	  const hasImage = (id: string) => {
+		let hasImage: boolean = false;
+		const unsubscriber = subscribe((state) => {
+		  if (state) {
+			hasImage = state.hasImage(id);
+		  }
+		});
+		unsubscriber()
+		return hasImage
+	  };
+
+	  const addImage = (id: string, image: HTMLImageElement | ImageBitmap | ImageData | {
+		width: number;
+		height: number;
+		data: Uint8Array | Uint8ClampedArray;
+		} | StyleImageInterface, options?: Partial<StyleImageMetadata>) => {
+		update((state) => {
+		  if (state) {
+			state.addImage(id, image, options);
+		  }
+		  return state;
+		});
+	  };
+
 	return {
 		subscribe,
 		update,
@@ -166,9 +212,13 @@ export const createMapStore = () => {
 		setPaintProperty,
 		setLayoutProperty,
 		addLayer,
+		hasLayer,
 		addSource,
 		getSource,
 		removeSource,
-		subscibeMapInitialized
+		subscibeMapInitialized,
+		loadImage,
+		hasImage,
+		addImage
 	};
 };
