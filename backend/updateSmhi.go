@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reflect"
 	"strconv"
 
 	firebase "firebase.google.com/go"
@@ -50,24 +51,14 @@ func UpdateSmhi(w http.ResponseWriter, r *http.Request) {
 	}
 	defer firestoreClient.Close()
 
-	stations, err := getStations(1)
-	if err != nil {
-		log.Fatalf("error getting stations: %v", err)
-		http.Error(w, "error getting stations", http.StatusInternalServerError)
-	}
-	stations = filterStations(stations)
+	measurementIndices := []int{1, 3, 4, 21, 6, 8, 12}
 
-	var observations []Observation
-	for _, station := range stations {
-		observation, err := getObservation(1, station.ID)
-		if err != nil {
-			log.Printf("error getting observation for station %s: %v", station.Name, err)
-			continue
-		}
-		observations = append(observations, observation)
+	observations := make([]Observation, 0)
+	for _, measurementIndex := range measurementIndices {
+		observations = append(observations, fetchMeasurement(w, measurementIndex)...)
 	}
 
-	// TODO: When multiple measurements, combine them into one document before storing.
+	observations = combineObservations(observations)
 
 	var features []geojson.Feature
 	for _, observation := range observations {
@@ -86,7 +77,6 @@ func UpdateSmhi(w http.ResponseWriter, r *http.Request) {
 			"visibility_m":      observation.VisibilityM,
 		}
 		features = append(features, *feature)
-
 	}
 
 	for _, feature := range features {
@@ -120,6 +110,66 @@ func UpdateSmhi(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("Data successfully fetched and stored in Firestore.")
 	fmt.Fprintln(w, "Data successfully fetched and stored in Firestore.")
+}
+
+func combineObservations(observations []Observation) []Observation {
+	combinedObservations := make(map[string]Observation)
+	for _, observation := range observations {
+		if _, ok := combinedObservations[*observation.Id]; !ok {
+			combinedObservations[*observation.Id] = observation
+		} else {
+			existingObservation := combinedObservations[*observation.Id]
+			reflectExisting := reflect.ValueOf(&existingObservation).Elem() // Note the & and.Elem()
+			reflectObservation := reflect.ValueOf(observation)
+
+			for i := 0; i < reflectObservation.NumField(); i++ {
+				field := reflectObservation.Field(i)
+				targetField := reflectExisting.Field(i)
+				fieldType := reflectObservation.Type().Field(i)
+
+				if targetField.Kind() == reflect.Ptr && targetField.IsNil() && !field.IsNil() {
+					if targetField.CanSet() { // This should now be true
+						if field.Elem().IsValid() {
+							targetField.Set(field) // No need for.Elem() here since both are pointers
+						} else {
+							log.Printf("Field %s's dereferenced value is not valid. Value %v, dereferenced: %v", fieldType.Name, field, field.Elem())
+						}
+					} else {
+						log.Printf("Field %s cannot be set", fieldType.Name)
+					}
+				}
+			}
+			combinedObservations[*observation.Id] = existingObservation // Update the map with the modified struct
+		}
+	}
+	// Convert map to slice as before
+	combinedObservationsSlice := make([]Observation, 0, len(combinedObservations))
+	for _, observation := range combinedObservations {
+		combinedObservationsSlice = append(combinedObservationsSlice, observation)
+	}
+	return combinedObservationsSlice
+}
+
+func fetchMeasurement(w http.ResponseWriter, measurement int) []Observation {
+	stations, err := getStations(measurement)
+	if err != nil {
+		log.Fatalf("error getting stations: %v", err)
+		http.Error(w, "error getting stations", http.StatusInternalServerError)
+	}
+	stations = filterStations(stations)
+
+	var observations []Observation
+	for _, station := range stations {
+		observation, err := getObservation(measurement, station.ID)
+		if err != nil {
+			log.Printf("error getting observation for station %s: %v", station.Name, err)
+			continue
+		}
+		if observation != nil {
+			observations = append(observations, *observation)
+		}
+	}
+	return observations
 }
 
 func getZero[T any]() T {
@@ -171,12 +221,12 @@ func setValue(observation *Observation, value *float64, measureMentindex int) {
 	}
 }
 
-func getObservation(measurementIndex int, stationID int) (Observation, error) {
+func getObservation(measurementIndex int, stationID int) (*Observation, error) {
 	fetchUrl := fmt.Sprintf("%v%v/station/%v/period/latest-hour/data.json", apiURL, measurementIndex, stationID)
 	measurement, err := fetchFromApi[Measurement](fetchUrl)
 	if err != nil {
 		log.Printf("Failed to fetch measurement on %v: %v", fetchUrl, err)
-		return Observation{}, err
+		return nil, err
 	}
 
 	var elevation float64
@@ -205,12 +255,14 @@ func getObservation(measurementIndex int, stationID int) (Observation, error) {
 		floatValue, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			log.Printf("Failed to parse value: %v", err)
-			return Observation{}, err
+			return nil, err
 		}
 		setValue(&observation, &floatValue, measurementIndex)
+	} else {
+		return nil, nil
 	}
 
-	return observation, nil
+	return &observation, nil
 }
 
 func getStations(measurementIndex int) ([]Station, error) {
