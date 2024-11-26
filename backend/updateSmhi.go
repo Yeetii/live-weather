@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"reflect"
@@ -212,6 +213,7 @@ func setValue(observation *Observation, value *float64, measureMentindex int) {
 	case 6:
 		observation.HumidityPercent = value
 	case 8:
+		*value = math.Round(*value*1000) / 10 // Convert from metres to centimeters, with 1 decimal
 		observation.SnowDepthCm = value
 	case 12:
 		observation.VisibilityM = value
