@@ -66,6 +66,23 @@
 										]
 									}
 								});
+								mapStore.update((map) => {
+									map.on('click', layerId, (e) => {
+										map.flyTo({
+											// @ts-ignore
+											center: e.features[0].geometry.coordinates,
+											zoom: 14
+										});
+									});
+									map.on('mouseenter', layerId, () => {
+										map.getCanvas().style.cursor = 'pointer';
+									});
+
+									map.on('mouseleave', layerId, () => {
+										map.getCanvas().style.cursor = '';
+									});
+									return map;
+								});
 							}
 						})
 						.catch((error: any) => {
