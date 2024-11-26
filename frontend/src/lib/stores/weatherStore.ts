@@ -1,9 +1,12 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, onSnapshot } from "firebase/firestore";
+import { collection, getFirestore, onSnapshot } from "firebase/firestore";
 import type { Feature } from "geojson";
 import { writable } from "svelte/store";
 
 export const weatherStore = writable<Feature[]>([]);
+export const snowEnabled = writable(true);
+export const temperatureEnabled = writable(false);
+export const windEnabled = writable(false);
 
 const app = initializeApp({projectId: "live-weather-eefc5"});
 const db = getFirestore(app);

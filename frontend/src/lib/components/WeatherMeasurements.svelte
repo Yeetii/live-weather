@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { MAPSTORE_CONTEXT_KEY, type MapStore } from '$lib/stores';
-	import { weatherStore } from '$lib/stores/weatherStore';
+	import {
+		snowEnabled,
+		temperatureEnabled,
+		weatherStore,
+		windEnabled
+	} from '$lib/stores/weatherStore';
 	import type { GeoJSONSource } from 'maplibre-gl';
 	import { getContext } from 'svelte';
 
@@ -66,4 +71,28 @@
 			}
 		});
 	}
+
+	snowEnabled.subscribe((status) => {
+		if (status) {
+			mapStore.setLayoutProperty('snowDepth_cm', 'visibility', 'visible');
+		} else {
+			mapStore.setLayoutProperty('snowDepth_cm', 'visibility', 'none');
+		}
+	});
+
+	windEnabled.subscribe((status) => {
+		if (status) {
+			mapStore.setLayoutProperty('windSpeed_ms', 'visibility', 'visible');
+		} else {
+			mapStore.setLayoutProperty('windSpeed_ms', 'visibility', 'none');
+		}
+	});
+
+	temperatureEnabled.subscribe((status) => {
+		if (status) {
+			mapStore.setLayoutProperty('temperature_c', 'visibility', 'visible');
+		} else {
+			mapStore.setLayoutProperty('temperature_c', 'visibility', 'none');
+		}
+	});
 </script>
