@@ -12,6 +12,7 @@
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { getContext, onMount } from 'svelte';
 	import '../../global.css';
+	import Sidebar from './Sidebar.svelte';
 	import WeatherMeasurements from './WeatherMeasurements.svelte';
 	import WeatherRadar from './WeatherRadar.svelte';
 	import Webcams from './Webcams.svelte';
@@ -58,6 +59,7 @@
 </script>
 
 <div class="map w-full h-full" data-testid="map" bind:this={mapContainer}>
+	<Sidebar />
 	<WeatherRadar />
 	<WeatherMeasurements />
 	<Webcams />

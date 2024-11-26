@@ -29,6 +29,7 @@ interface Radar {
   }
 
   export const radarData = writable<CloudData>();
+  export const radarEnabled = writable(false);
 
 fetch('https://api.rainviewer.com/public/weather-maps.json')
     .then((res) => res.json())

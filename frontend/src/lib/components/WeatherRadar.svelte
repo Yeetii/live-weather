@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { MapStore } from '$lib/stores';
 	import { MAPSTORE_CONTEXT_KEY } from '$lib/stores';
-	import { radarData } from '$lib/stores/rainStore';
+	import { radarData, radarEnabled } from '$lib/stores/rainStore';
 	import 'maplibre-gl/dist/maplibre-gl.css';
 	import { getContext, onDestroy, onMount } from 'svelte';
 	import '../../global.css';
@@ -16,20 +16,21 @@
 	var radarLayers: RadarLayer[];
 	var interval: NodeJS.Timeout;
 	var currentTimestamp: number;
-	var radarEnabled = false;
+	var showTimestamp: boolean;
 
-	const toggleRadar = (_e: Event) => {
+	radarEnabled.subscribe((status) => {
 		if (!radarLayers) {
-			radarEnabled = false;
+			radarEnabled.set(false);
 			return;
 		}
 
-		if (radarEnabled) {
+		showTimestamp = status;
+		if (status) {
 			animateWeather();
 		} else {
 			disableRadar();
 		}
-	};
+	});
 
 	const disableRadar = () => {
 		if (radarLayers) {
@@ -39,13 +40,6 @@
 		}
 		clearInterval(interval);
 	};
-
-	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'w' || event.key === 'W') {
-			radarEnabled = !radarEnabled;
-			toggleRadar(event);
-		}
-	}
 
 	const animateWeather = () => {
 		let i = 0;
@@ -108,26 +102,8 @@
 	});
 </script>
 
-<div class="absolute top-5 left-5 z-50">
-	<div class="max-w-lg mx-auto">
-		<label for="toggle-weatherradar" class="flex items-center cursor-pointer relative mb-4">
-			<input
-				type="checkbox"
-				id="toggle-weatherradar"
-				class="sr-only"
-				bind:checked={radarEnabled}
-				on:change={toggleRadar}
-			/>
-			<div class="toggle-bg bg-gray-200 border-2 border-gray-200 h-6 w-11 rounded-full"></div>
-			<span class="ml-3 text-gray-900 text-sm font-medium">Weather radar</span>
-		</label>
-	</div>
-</div>
-
-{#if radarEnabled}
+{#if showTimestamp}
 	<div class="absolute bottom-5 left-5 z-50 font-bold text-lg">
 		{timestampToString(currentTimestamp)}
 	</div>
 {/if}
-
-<svelte:window on:keydown={handleKeydown} />
