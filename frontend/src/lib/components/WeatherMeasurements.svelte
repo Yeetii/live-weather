@@ -37,6 +37,30 @@
 			addMeasurement('windSpeed_ms', 'm/s');
 			addMeasurement('temperature_c', '°C');
 			addMeasurement('snowDepth_cm', 'cm');
+
+			snowEnabled.subscribe((status) => {
+				if (status) {
+					mapStore.setLayoutProperty('snowDepth_cm', 'visibility', 'visible');
+				} else {
+					mapStore.setLayoutProperty('snowDepth_cm', 'visibility', 'none');
+				}
+			});
+
+			windEnabled.subscribe((status) => {
+				if (status) {
+					mapStore.setLayoutProperty('windSpeed_ms', 'visibility', 'visible');
+				} else {
+					mapStore.setLayoutProperty('windSpeed_ms', 'visibility', 'none');
+				}
+			});
+
+			temperatureEnabled.subscribe((status) => {
+				if (status) {
+					mapStore.setLayoutProperty('temperature_c', 'visibility', 'visible');
+				} else {
+					mapStore.setLayoutProperty('temperature_c', 'visibility', 'none');
+				}
+			});
 		});
 	});
 
@@ -64,35 +88,12 @@
 					'right',
 					[2, 0]
 				],
-				'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 5, 0, 10, 2, 15, 3]
+				'text-radial-offset': ['interpolate', ['linear'], ['zoom'], 5, 0, 10, 2, 15, 3],
+				visibility: 'none'
 			},
 			paint: {
 				'text-color': '#000'
 			}
 		});
 	}
-
-	snowEnabled.subscribe((status) => {
-		if (status) {
-			mapStore.setLayoutProperty('snowDepth_cm', 'visibility', 'visible');
-		} else {
-			mapStore.setLayoutProperty('snowDepth_cm', 'visibility', 'none');
-		}
-	});
-
-	windEnabled.subscribe((status) => {
-		if (status) {
-			mapStore.setLayoutProperty('windSpeed_ms', 'visibility', 'visible');
-		} else {
-			mapStore.setLayoutProperty('windSpeed_ms', 'visibility', 'none');
-		}
-	});
-
-	temperatureEnabled.subscribe((status) => {
-		if (status) {
-			mapStore.setLayoutProperty('temperature_c', 'visibility', 'visible');
-		} else {
-			mapStore.setLayoutProperty('temperature_c', 'visibility', 'none');
-		}
-	});
 </script>
