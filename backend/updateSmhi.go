@@ -250,6 +250,16 @@ func getObservation(measurementIndex int, stationID int) (*Observation, error) {
 		Name:      &name,
 	}
 
+	if len(measurement.Value) == 0 {
+		fetchUrl := fmt.Sprintf("%v%v/station/%v/period/latest-day/data.json", apiURL, measurementIndex, stationID)
+		daylyMeasurement, err := fetchFromApi[Measurement](fetchUrl)
+		if err != nil {
+			log.Printf("Failed to fetch measurement on %v: %v", fetchUrl, err)
+			return nil, err
+		}
+		measurement = daylyMeasurement
+	}
+
 	if len(measurement.Value) > 0 {
 		value := measurement.Value[0].Value
 		floatValue, err := strconv.ParseFloat(value, 64)

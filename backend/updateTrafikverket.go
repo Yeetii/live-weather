@@ -97,7 +97,7 @@ func UpdateTrafikverket(w http.ResponseWriter, r *http.Request) {
 		for _, measurepoint := range result.WeatherMeasurepoint {
 			coordinate := parseCoordinate(measurepoint.Geometry.WGS84)
 			feature := geojson.NewPointFeature(coordinate)
-			feature.ID = measurepoint.ID
+			feature.ID = "trafikverket-" + measurepoint.ID
 			feature.Properties = map[string]interface{}{
 				"name":              measurepoint.Name,
 				"elevation":         nil,
