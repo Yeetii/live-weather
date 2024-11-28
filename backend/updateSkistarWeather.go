@@ -29,6 +29,9 @@ func updateSkistarWeather(w http.ResponseWriter, r *http.Request) {
 		{Id: "hogzon", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=hogzon", TopLocation: []float64{63.42746531861163, 13.07798918790169}, BottomLocation: nil},
 		{Id: "bjornen", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=bjornen", TopLocation: []float64{63.40397330198576, 13.112439722480248}, BottomLocation: []float64{63.39058903591519, 13.124520371380962}},
 		{Id: "duved", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=duved", TopLocation: []float64{63.40925052213198, 12.933974437408123}, BottomLocation: []float64{63.39653432268454, 12.924465636198212}},
+		{Id: "vemdalsskalet", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=vemdalsskalet", TopLocation: []float64{62.483387, 13.956566}, BottomLocation: []float64{62.484503, 13.967102}},
+		{Id: "bjornrike", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=bjornrike", TopLocation: []float64{62.41864, 13.98688}, BottomLocation: []float64{62.42142, 13.95809}},
+		{Id: "klovsjostorhogna", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=klovsjostorhogna", TopLocation: []float64{62.49811, 14.09203}, BottomLocation: []float64{62.49464, 14.11936}},
 	}
 
 	var observations []lib.Observation
