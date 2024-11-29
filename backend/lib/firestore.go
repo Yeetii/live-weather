@@ -23,6 +23,7 @@ type Observation struct {
 	WindGustSpeedMs  *float64 `json:"windGustSpeed_ms"`
 	HumidityPercent  *float64 `json:"humidity_percent"`
 	NewSnow24hCm     *float64 `json:"newSnow24h_cm"`
+	NewSnow72hCm     *float64 `json:"newSnow72h_cm"`
 	SnowDepthCm      *float64 `json:"snowDepth_cm"`
 	VisibilityM      *float64 `json:"visibility_m"`
 }
@@ -59,7 +60,8 @@ func UploadObservationsToFirestore(observations []Observation) error {
 			"windDirection_deg": observation.WindDirectionDeg,
 			"windGustSpeed_ms":  observation.WindGustSpeedMs,
 			"humidity_percent":  observation.HumidityPercent,
-			"newSnow24h_cm":     nil,
+			"newSnow24h_cm":     observation.NewSnow24hCm,
+			"newSnow72h_cm":     observation.NewSnow72hCm,
 			"snowDepth_cm":      observation.SnowDepthCm,
 			"visibility_m":      observation.VisibilityM,
 		}

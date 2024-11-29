@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/PuerkitoBio/goquery"
@@ -25,7 +26,7 @@ func init() {
 
 func updateSkistarWeather(w http.ResponseWriter, r *http.Request) {
 	inputs := []SkistarWeatherInput{
-		{Id: "areby", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=areby", TopLocation: nil, BottomLocation: []float64{63.403513916879106, 13.059243790348805}},
+		{Id: "areby", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=areby", TopLocation: []float64{63.41634525563247, 13.06472146254914}, BottomLocation: []float64{63.403513916879106, 13.059243790348805}},
 		{Id: "hogzon", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=hogzon", TopLocation: []float64{63.42746531861163, 13.07798918790169}, BottomLocation: nil},
 		{Id: "bjornen", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=bjornen", TopLocation: []float64{63.40397330198576, 13.112439722480248}, BottomLocation: []float64{63.39058903591519, 13.124520371380962}},
 		{Id: "duved", Url: "https://www.skistar.com/Lpv/Forecast?lang=sv&area=duved", TopLocation: []float64{63.40925052213198, 12.933974437408123}, BottomLocation: []float64{63.39653432268454, 12.924465636198212}},
@@ -38,8 +39,6 @@ func updateSkistarWeather(w http.ResponseWriter, r *http.Request) {
 
 	for _, input := range inputs {
 		var weather = scrapeCurrentWeather(input.Url)
-		log.Println(input.Id)
-		log.Println(weather)
 		if input.TopLocation != nil {
 			id := "skistar-" + input.Id + "-top"
 			observation := lib.Observation{Id: &id, Latitude: &input.TopLocation[0], Longitude: &input.TopLocation[1], TemperatureC: &weather.TemperatureTop, WindSpeedMs: &weather.WindSpeedTop, WindGustSpeedMs: &weather.GustWindpeedTop}
@@ -51,7 +50,33 @@ func updateSkistarWeather(w http.ResponseWriter, r *http.Request) {
 			observations = append(observations, observation)
 		}
 	}
+
+	areAreas := []string{"areby", "hogzon", "duved", "bjornen"}
+	// The &area parameter gives the same output within a ski destination
+	areSnow := scrapeSnow("https://www.skistar.com/Lpv/SnowGraph?lang=sv&area=areby", areAreas)
+
+	vemdalenAreas := []string{"bjornrike", "vemdalsskalet", "klovsjostorhogna"}
+	vemdalenSnow := scrapeSnow("https://www.skistar.com/Lpv/SnowGraph?lang=sv&area=vemdalsskalet", vemdalenAreas)
+
+	refineObservationsWithSnow(observations, areSnow)
+	refineObservationsWithSnow(observations, vemdalenSnow)
+
 	lib.UploadObservationsToFirestore(observations)
+}
+
+func refineObservationsWithSnow(observations []lib.Observation, areSnow map[string]snowMeasurement) {
+	for i, v := range observations {
+		idParts := strings.Split(*v.Id, "-")
+		if idParts[2] == "top" {
+			snow, exists := areSnow[idParts[1]]
+			if exists {
+				v.SnowDepthCm = &snow.SnowDepth
+				v.NewSnow24hCm = &snow.NewSnow24hCm
+				v.NewSnow72hCm = &snow.NewSnow72hCm
+				observations[i] = v
+			}
+		}
+	}
 }
 
 type weatherMeasurement struct {
@@ -135,4 +160,52 @@ func extractFloat(element *goquery.Selection) (float64, error) {
 		return 0, error(fmt.Errorf("no float found in string: %s", text))
 	}
 	return strconv.ParseFloat(match, 64)
+}
+
+type snowMeasurement struct {
+	SnowDepth    float64
+	NewSnow24hCm float64
+	NewSnow72hCm float64
+}
+
+func scrapeSnow(url string, areas []string) map[string]snowMeasurement {
+	res, err := http.Get(url)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != 200 {
+		log.Fatalf("Failed to fetch the webpage: %s", res.Status)
+	}
+
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	depthFields := doc.Find(".lpv-info-snow__value-number")
+	newSnowFields := doc.Find(".lpv-info-list__value")
+
+	measurements := make(map[string]snowMeasurement)
+
+	for i, v := range areas {
+		snowDepth, err := extractFloat(depthFields.Eq(i))
+		if err != nil {
+			log.Println(err)
+		}
+
+		newSnow24h, err := extractFloat(newSnowFields.Eq(i * 2))
+		if err != nil {
+			log.Println(err)
+		}
+
+		newSnow72h, err := extractFloat(newSnowFields.Eq(i*2 + 1))
+		if err != nil {
+			log.Println(err)
+		}
+
+		measurements[v] = snowMeasurement{SnowDepth: snowDepth, NewSnow24hCm: newSnow24h, NewSnow72hCm: newSnow72h}
+	}
+	return measurements
 }
